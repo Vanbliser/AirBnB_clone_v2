@@ -27,7 +27,7 @@ This repository contains the initial stage of a student project to build a clone
 
 3. Once the repository is cloned locate the "console.py" file and run it as follows:
 ```
-/AirBnB_clone$ ./console.py
+/AirBnB_clone_v2$ ./console.py
 ```
 4. When this command is run the following prompt should appear:
 ```
@@ -64,6 +64,51 @@ Advanced syntax is implemented for the following commands:
 	* destroy - Destroys an object based on class and UUID
 
     * update - Updates existing attributes an object based on class name and UUID
+
+
+The console will perform the following tasks:
+Create a new object
+Retrive an object from a file
+Do operations on objects
+Destroy an object
+Update attributes of an object
+
+Execution
+Your shell should work like this in interactive mode:
+
+$ ./console.py
+(hbnb) help
+
+Documented commands (type help <topic>):
+========================================
+EOF  help  quit
+
+(hbnb)
+(hbnb)
+(hbnb) quit
+$
+But also in non-interactive mode: (like the Shell project in C)
+
+$ echo "help" | ./console.py
+(hbnb)
+
+Documented commands (type help <topic>):
+========================================
+EOF  help  quit
+(hbnb)
+$
+$ cat test_help
+help
+$
+$ cat test_help | ./console.py
+(hbnb)
+
+Documented commands (type help <topic>):
+========================================
+EOF  help  quit
+(hbnb)
+$
+
 
 <br>
 <br>
