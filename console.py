@@ -128,20 +128,20 @@ class HBNBCommand(cmd.Cmd):
         if args[0] not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
-        key_val = {}
+        kwargs = {}
         for i in range(1, len(args)):
             key, val = tuple(args[i].split("="))
             try:
                 if type(eval(val)) == str:
-                    key_val[key] = val.strip('"').replace("_", " ")
+                    kwargs[key] = val.strip('"').replace("_", " ")
                 else:
-                    key_val[key] = eval(val)
+                    kwargs[key] = eval(val)
             except Exception:
                 pass
 
-       new_instance = HBNBCommand[args[0]](**key_val)
-       storage.save()
-       print(new_instance.id)
+        new_instance = HBNBCommand.args[0](**kwargs)
+        storage.save()
+        print(new_instance.id)
 
     def help_create(self):
         """ Help information for the create method """
