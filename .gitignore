@@ -1,4 +1,7 @@
 # project custom files to be ignored
+set_env_var
+file.json
+save_file.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
