@@ -4,6 +4,8 @@
 """ Console Module """
 import cmd
 import sys
+import re
+from shlex import split
 from models.base_model import BaseModel
 from models.__init__ import storage
 from models.user import User
@@ -12,6 +14,28 @@ from models.state import State
 from models.city import City
 from models.amenity import Amenity
 from models.review import Review
+
+
+def process_input(input_arg):
+    curly_match = re.search(r"\{(.*?)\}", input_arg)
+    bracket_match = re.search(r"\[(.*?)\]", input_arg)
+    if curly_match is None:
+        if bracket_match is None:
+            return [val.strip(",") for val in split(input_arg)]
+        else:
+            split_input = split(input_arg[:bracket_match.span()[0]])
+            result_list = []
+            for i in split_input:
+                result_list.append(i.strip(","))
+            result_list.append(bracket_match.group())
+            return result_list
+    else:
+        split_input = split(input_arg[:curly_match.span()[0]])
+        result_list = []
+        for i in split_input:
+            result_list.append(i.strip(","))
+        result_list.append(curly_match.group())
+        return result_list
 
 
 class HBNBCommand(cmd.Cmd):
@@ -117,31 +141,40 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """ Create an object of any class"""
+
         if not args:
             print("** class name missing **")
             return
-        elif args not in HBNBCommand.classes:
+        # preserve double quote
+        args = args.replace('"', '\\"')
+        # split arguments
+        arg_list = process_input(args)
+        cls = arg_list[0]
+        args = arg_list[1:]
+        if arg_list[0] not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
-        #split arguments
-        args = args.split()
-        if args[0] not in HBNBCommand.classes:
-            print("** class doesn't exist **")
-            return
-        key_val = {}
-        for i in range(1, len(args)):
+        kwargs = {}
+        ignored_attrs = ('id',)
+        for i in range(len(args)):
             key, val = tuple(args[i].split("="))
-            try:
-                if type(eval(val)) == str:
-                    key_val[key] = val.strip('"').replace("_", " ")
-                else:
-                    key_val[key] = eval(val)
-            except Exception:
-                pass
-
-       new_instance = HBNBCommand[args[0]](**key_val)
-       storage.save()
-       print(new_instance.id)
+            if key in ignored_attrs:
+                continue
+            if val.startswith('"') and val.endswith('"'):
+                kwargs[key] = val
+            else:
+                try:
+                    val = int(val)
+                    kwargs[key] = val
+                except ValueError:
+                    try:
+                        val = float(val)
+                        kwargs[key] = val
+                    except ValueError:
+                        pass
+        new_instance = HBNBCommand.classes[cls](**kwargs)
+        storage.save()
+        print(new_instance.id)
 
     def help_create(self):
         """ Help information for the create method """
@@ -172,7 +205,7 @@ class HBNBCommand(cmd.Cmd):
 
         key = c_name + "." + c_id
         try:
-            print(storage._FileStorage__objects[key])
+            print(storage.all()[key])
         except KeyError:
             print("** no instance found **")
 
@@ -223,11 +256,11 @@ class HBNBCommand(cmd.Cmd):
             if args not in HBNBCommand.classes:
                 print("** class doesn't exist **")
                 return
-            for k, v in storage._FileStorage__objects.items():
+            for k, v in storage.all().items():
                 if k.split('.')[0] == args:
                     print_list.append(str(v))
         else:
-            for k, v in storage._FileStorage__objects.items():
+            for k, v in storage.all().items():
                 print_list.append(str(v))
 
         print(print_list)
@@ -240,7 +273,7 @@ class HBNBCommand(cmd.Cmd):
     def do_count(self, args):
         """Count current number of class instances"""
         count = 0
-        for k, v in storage._FileStorage__objects.items():
+        for k, v in storage.all().items():
             if args == k.split('.')[0]:
                 count += 1
         print(count)
@@ -288,6 +321,7 @@ class HBNBCommand(cmd.Cmd):
                 args.append(k)
                 args.append(v)
         else:  # isolate args
+
             args = args[2]
             if args and args[0] == '\"':  # check for quoted arg
                 second_quote = args.find('\"', 1)
