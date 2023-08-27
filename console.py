@@ -155,11 +155,8 @@ class HBNBCommand(cmd.Cmd):
             print("** class doesn't exist **")
             return
         kwargs = {}
-        ignored_attrs = ('id',)
         for i in range(len(args)):
             key, val = tuple(args[i].split("="))
-            if key in ignored_attrs:
-                continue
             if val.startswith('"') and val.endswith('"'):
                 kwargs[key] = val
             else:
