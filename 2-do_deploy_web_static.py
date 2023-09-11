@@ -20,8 +20,8 @@ def do_deploy(archive_path):
     Args:
         archive_path (str): The path of the archive to distribute.
     Returns (bool):
-        Returns False if the file doesn't exist at archive_path or an error occurs,
-        Otherwise, return True.
+        Returns False if the file doesn't exist at archive_path or an error
+        occurs, Otherwise, return True.
     """
 
     if os.path.isfile(archive_path) is False:
