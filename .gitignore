@@ -3,6 +3,7 @@ set_env_var
 file.json
 save_file.json
 *.swp
+versions/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
