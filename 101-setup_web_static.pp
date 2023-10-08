@@ -3,10 +3,10 @@
 $STATIC_CONFIG='\tlocation /hbnb_static {\n\t\talias /data/web_static/current;\n\t\tindex index.html index.htm;\n\t}'
 $STATIC_COMMENT='\t# Serve static content'
 $ERROR_COMMENT='\t# Custom error page'
-$CUSTOM_ERROR='\terror_page 404 /custom_404.html;\n\tlocation = /custom404.html {\n\t\troot /var/www/html;\n\t\tinternal;\n\t}'
+$directories = ['/data/', '/data/web_static/', '/data/web_static/releases/', '/data/web_static/shared/', '/data/web_static/releases/test/']
 
 package { 'nginx':
-  ensure   => installed,
+  ensure => 'installed',
 }
 
 -> file_line { 'redirect_me':
@@ -25,7 +25,7 @@ package { 'nginx':
 
 -> exec { 'static_config'
   path    => '/usr/bin:/bin',
-  command => 'sudo sed -i "/server_name _/a\\\n$STATIC_COMMENT\n$STATIC_CONFIG" /etc/nginx/sites-available/default',
+  command => 'sudo sed -i "/server_name _;/a\\\n$STATIC_COMMENT\n$STATIC_CONFIG" /etc/nginx/sites-available/default',
 }
 
 -> exec { 'custom_error'
@@ -39,34 +39,28 @@ package { 'nginx':
   content => 'Hello World!',
 }
 
--> exec { 'create_folders':
-  command => '/usr/bin/bash mkdir -p /data/web_static/releases/test/',
-}
-
--> file { '/data/web_static/releases/test/index.html':
-  ensure  => 'present',
-  content => "this webpage is found in data/web_static/releases/test/index.htm \n",
-  owner   => 'ubuntu',
-  mode    => '0644',
-}
-
--> file { '/data/web_static/shared':
+-> file { $directories:
   ensure  => 'directory',
   owner   => 'ubuntu',
-  mode    => '0775',
+  group   => 'ubuntu',
+  recurse => 'remote',
+  mode    => '0777',
 }
 
 -> file { '/data/web_static/current':
-  ensure => 'link',
-  target => '/data/web_static/releases/test',
-  owner   => 'ubuntu',
+  ensure => link,
+  target => '/data/web_static/releases/test/',
 }
 
--> exec { 'set_permissions':
-  command => '/usr/bin/bash chown -R ubuntu:ubuntu /data'
+-> file {'/data/web_static/releases/test/index.html':
+  ensure  => present,
+  content => 'this webpage is found in data/web_static/releases/test/index.htm \n',
+  owner   => 'ubuntu',
+  group   => 'ubuntu',
+  mode    => '0644',
 }
 
 -> service { 'nginx':
-  ensure  => running,
+  ensure  => 'running',
   require => Package['nginx'],
 }
