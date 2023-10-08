@@ -9,70 +9,79 @@ package { 'nginx':
   ensure => installed,
 }
 
--> file_line { 'redirect_me':
+file_line { 'redirect_me':
   ensure => 'present',
   path   => '/etc/nginx/sites-available/default',
   after  => 'listen 80 default_server;',
   line   => 'rewrite ^/redirect_me/?$ https://www.youtube.com/watch?v=QH2-TGUlwu4 permanent;',
 }
 
--> file_line { 'custom_header':
+file_line { 'custom_header':
   ensure => 'present',
   path   => '/etc/nginx/sites-available/default',
   after  => 'listen 80 default_server;',
   line   => 'add_header X-Served-By 6684-web-01;',
 }
 
--> exec { 'static_config'
+exec { 'static_config'
   path    => '/usr/bin:/bin',
   command => 'sudo sed -i "/server_name _/a\\\n$STATIC_COMMENT\n$STATIC_CONFIG" /etc/nginx/sites-available/default'
 }
 
--> exec { 'custom_error'
+exec { 'custom_error'
   path    => '/usr/bin:/bin',
   command => 'sudo sed -i "/server_name _;/a\\\n\n$ERROR_COMMENT\n$CUSTOM_ERROR" /etc/nginx/sites-available/default'
 }
 
--> file { '/data':
-  ensure  => 'directory'
+file { '/data':
+  ensure  => 'directory',
+  owner   => 'ubuntu'
 }
 
--> file { '/data/web_static':
+file { '/data/web_static':
   ensure => 'directory'
+  owner   => 'ubuntu'
 }
 
--> file { '/data/web_static/releases':
+file { '/data/web_static/releases':
   ensure => 'directory'
+  owner   => 'ubuntu'
 }
 
--> file { '/data/web_static/releases/test':
+file { '/data/web_static/releases/test':
   ensure => 'directory'
+  owner   => 'ubuntu'
 }
 
--> file { '/data/web_static/shared':
+file { '/data/web_static/shared':
   ensure => 'directory'
+  owner   => 'ubuntu'
 }
 
--> file { '/data/web_static/releases/test/index.html':
+file { '/data/web_static/releases/test/index.html':
   ensure  => 'present',
   content => "this webpage is found in data/web_static/releases/test/index.htm \n"
+  owner   => 'ubuntu'
 }
 
--> file { '/data/web_static/current':
+file { '/data/web_static/current':
   ensure => 'link',
   target => '/data/web_static/releases/test'
+  owner   => 'ubuntu'
 }
 
--> exec { 'chown -R ubuntu:ubuntu /data/':
+exec { 'chown -R ubuntu:ubuntu /data/':
   path => '/usr/bin/:/usr/local/bin/:/bin/'
 }
 
--> file { 'home_page':
+file { 'home_page':
   path    => '/var/www/html/index.html',
   content => 'Hello World!',
 }
 
--> service { 'nginx':
+service { 'nginx':
   ensure  => running,
   require => Package['nginx'],
 }
+
+File['/data'] -> File['/data/web_static'] -> File['/data/web_static/releases'] -> File['/data/web_static/releases/test'] -> File['/data/web_static/releases/test/index.html'] -> File['/data/web_static/shared'] -> File['/data/web_static/current'] -> Package['nginx'] -> File_line['redirect_me'] -> File_line['custom_header'] -> Exec['custom_error'] -> Exec['custom_error'] -> File['home_page'] -> Service['nginx']
